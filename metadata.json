@@ -1,0 +1,6 @@
+{
+  "name": "Melifera coffee - Café co-creado con abejas",
+  "description": "Melifera coffee: Producción, comercialización y preparación de cafés especiales, apicultura, plántulas, café verde, miel virgen, polen, propóleo y experiencias de café y abejas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

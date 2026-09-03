@@ -1,0 +1,1 @@
+import { initTursoSchema } from './turso'; initTursoSchema().then(() => { console.log('MIGRATION COMPLETE'); process.exit(0); }).catch((err) => { console.error('MIGRATION FAILED:', err); process.exit(1); });
