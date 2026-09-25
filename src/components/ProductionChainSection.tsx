@@ -47,11 +47,14 @@ export const ProductionChainSection: React.FC = () => {
       category: 'Siembra & Campo',
       badge: 'Genética Certificada',
       description:
-        'Todo comienza seleccionando semillas de variedades superiores: Geisha, Bourbon Rosado y Castillo. Cuidamos cada chapola en camas de arena y las trasplantamos a bolsas de almácigo enriquecidas con micorrizas y compost de pulpa de café. Producimos y comercializamos plántulas vigorosas listas para siembra en finca.',
+        'Producimos plántulas de café seleccionadas, con trazabilidad y control fitosanitario. Contamos con certificación ICA, garantizando material vegetal de calidad y el cumplimiento de los requisitos para su comercialización.',
       details: [
-        'Semillas madre seleccionadas por vigor genético y taza',
-        'Sustrato orgánico inoculado con micorrizas para un sistema radicular pivotante fuerte',
-        'Venta de plántulas de café por lote o unidad para caficultores y proyectos agroecológicos',
+        'Variedades: Según disponibilidad',
+        'Tipo de material: Plántulas seleccionadas',
+        'Calidad: Control fitosanitario',
+        'Trazabilidad: Desde el vivero',
+        'Certificación: ICA',
+        'Presentación: Venta al por mayor y al detal',
       ],
       productOrServiceLink: {
         type: 'tienda',
@@ -62,12 +65,12 @@ export const ProductionChainSection: React.FC = () => {
     {
       id: 'siembra-suelos',
       number: '02',
-      title: 'Siembra en Alta Montaña a 1.850 msnm & Agroforestería',
+      title: 'Siembra en Alta Montaña a 1.650 msnm & Agroforestería',
       shortTitle: 'Siembra & Cultivo',
       category: 'Siembra & Campo',
       badge: 'Agricultura Regenerativa',
       description:
-        'Establecemos nuestros cafetales bajo sombrío diverso de guamos, plátano y árboles nativos de la Cordillera Central. La altura de 1.850 msnm permite una maduración lenta de la cereza que concentra mayores azúcares y complejidad ácida.',
+        'Establecemos nuestros cafetales bajo sombrío diverso de guamos, plátano y árboles nativos de la Cordillera Central. La altura de 1.650 msnm permite una maduración lenta de la cereza que concentra mayores azúcares y complejidad ácida.',
       details: [
         'Lotes protegidos con cobertura viva y microbiología de montaña',
         'Fertilización orgánica basada en el compostaje de pulpa de café y biofertilizantes',
@@ -117,7 +120,7 @@ export const ProductionChainSection: React.FC = () => {
         type: 'eventos',
         label: 'Vivir la Recolección en el Tour',
       },
-      imageUrl: '/images/cosecha-cerezas-cafe.jpg',
+      imageUrl: '/images/señora posando con el cafe.jpeg',
     },
     {
       id: 'beneficio-fermentacion',
@@ -149,7 +152,7 @@ export const ProductionChainSection: React.FC = () => {
         'Control higrométrico riguroso hasta alcanzar el estándar internacional de exportación',
         'Reposo en pergamino en bodega aclimatada para fijar el perfil sensorial',
       ],
-      imageUrl: '/images/semillero-chapolas-cafe.jpg',
+      imageUrl: '/images/cafe en grano.jpeg',
     },
     {
       id: 'cafe-verde-tostadores',
@@ -172,28 +175,8 @@ export const ProductionChainSection: React.FC = () => {
       imageUrl: '/images/producto-cafe-especialidad.jpg',
     },
     {
-      id: 'tostion-especialidad',
-      number: '08',
-      title: 'Tostión Artesanal de Especialidad en la Finca',
-      shortTitle: 'Tostión Artesanal',
-      category: 'Tueste & Preparación',
-      badge: 'Perfil de Tueste Medio',
-      description:
-        'En nuestra propia sala de tostión aplicamos curvas térmicas diseñadas para cada microlote. Desarrollamos la caramelización de los azúcares naturales aportados por la floración y las abejas sin quemar los aceites aromáticos.',
-      details: [
-        'Tueste en pequeños baches (microlotes) para asegurar frescura absoluta',
-        'Tueste medio que resalta notas a miel, jazmín, caña de azúcar y chocolate de origen',
-        'Empaque con válvula desgasificadora unidireccional para preservar aroma y frescura',
-      ],
-      productOrServiceLink: {
-        type: 'tienda',
-        label: 'Comprar Café Tostado en Tienda',
-      },
-      imageUrl: '/images/granos-cafe-tostado-fresco.jpg',
-    },
-    {
       id: 'metodos-filtrado',
-      number: '09',
+      number: '08',
       title: 'Capacitación en Métodos de Filtrado (V60, Chemex, AeroPress)',
       shortTitle: 'Capacitaciones & Filtrados',
       category: 'Tueste & Preparación',
@@ -213,7 +196,7 @@ export const ProductionChainSection: React.FC = () => {
     },
     {
       id: 'cafeteria-taza',
-      number: '10',
+      number: '09',
       title: 'La Taza en Nuestra Cafetería: Coffee Tours, Tours de Abejas & Fogatas',
       shortTitle: 'La Taza & Experiencias',
       category: 'Cafetería & Taza',
@@ -288,7 +271,7 @@ export const ProductionChainSection: React.FC = () => {
           <div className="lg:col-span-7 space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-2xl font-black text-[#FFD242] font-display">
-                Paso {currentStep.number} / 10
+                Paso {currentStep.number} / {String(chainSteps.length).padStart(2, '0')}
               </span>
               <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-white/10 text-amber-200 border border-white/15">
                 {currentStep.category}
@@ -308,6 +291,10 @@ export const ProductionChainSection: React.FC = () => {
 
             {/* Checklist of highlights */}
             <div className="space-y-2.5 pt-2">
+              <h4 className="text-xs font-black uppercase text-[#FFD242] tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{currentStep.id === 'semillero-vivero' ? 'Ficha técnica Plántulas de café' : 'Aspectos clave del proceso'}</span>
+              </h4>
               {currentStep.details.map((detail, dIdx) => (
                 <div key={dIdx} className="flex items-start gap-3 text-xs sm:text-sm text-slate-200">
                   <CheckCircle2 className="w-4 h-4 text-[#FFD242] shrink-0 mt-0.5" />
@@ -369,7 +356,7 @@ export const ProductionChainSection: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-[#2D1A0D] via-transparent to-transparent opacity-60" />
               <div className="absolute bottom-4 left-4 right-4 p-3 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 text-xs">
                 <span className="text-[#FFD242] font-black block">Finca Melifera coffee</span>
-                <span className="text-white text-[11px] font-medium">{currentStep.shortTitle} • 1.850 msnm</span>
+                <span className="text-white text-[11px] font-medium">{currentStep.shortTitle} • 1.650 msnm</span>
               </div>
             </div>
           </div>

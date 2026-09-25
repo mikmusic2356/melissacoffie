@@ -132,15 +132,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="text-[10px] uppercase tracking-wider text-[#3E2714] font-bold block">
-                Al por Mayor
-              </span>
-              <span className="text-xs font-bold text-[#3E2714]">
-                Desde {formatCOP(product.wholesalePriceMin)}
-              </span>
-              <span className="block text-[9px] text-slate-400">Min. {product.minWholesaleQuantity} uds</span>
-            </div>
+            {product.wholesalePriceMin > 0 ? (
+              <div className="text-right">
+                <span className="text-[10px] uppercase tracking-wider text-[#3E2714] font-bold block">
+                  Al por Mayor
+                </span>
+                <span className="text-xs font-bold text-[#3E2714]">
+                  Desde {formatCOP(product.wholesalePriceMin)}
+                </span>
+                <span className="block text-[9px] text-slate-400">Min. {product.minWholesaleQuantity} uds</span>
+              </div>
+            ) : (
+              <div className="text-right">
+                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                  Disponibilidad
+                </span>
+                <span className="text-xs font-bold text-[#2D1A0D]">
+                  Venta al Detal
+                </span>
+                <span className="block text-[9px] text-slate-400">Sin precio mayorista</span>
+              </div>
+            )}
           </div>
 
           {/* Action buttons */}

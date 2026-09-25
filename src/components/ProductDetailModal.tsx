@@ -138,15 +138,27 @@ export const ProductDetailModal: React.FC = () => {
               )}
 
               {/* Wholesale Tier Notice */}
-              <div className="p-3.5 rounded-[20px] bg-stone-50 border border-stone-200/70 text-xs space-y-1">
-                <div className="flex justify-between font-bold text-slate-800">
-                  <span>Precios por Mayor:</span>
-                  <span className="text-[#3E2714] font-display">Desde {formatCOP(product.wholesalePriceMin)}</span>
+              {product.wholesalePriceMin > 0 ? (
+                <div className="p-3.5 rounded-[20px] bg-stone-50 border border-stone-200/70 text-xs space-y-1">
+                  <div className="flex justify-between font-bold text-slate-800">
+                    <span>Precios por Mayor:</span>
+                    <span className="text-[#3E2714] font-display">Desde {formatCOP(product.wholesalePriceMin)}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Aplica para pedidos mayores a {product.minWholesaleQuantity} {product.unitLabel}.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-500">
-                  Aplica para pedidos mayores a {product.minWholesaleQuantity} {product.unitLabel}.
-                </p>
-              </div>
+              ) : (
+                <div className="p-3.5 rounded-[20px] bg-stone-50 border border-stone-200/70 text-xs space-y-1">
+                  <div className="flex justify-between font-bold text-slate-800">
+                    <span>Precios por Mayor:</span>
+                    <span className="text-slate-500 font-semibold">Sin precio al por mayor</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Venta exclusiva al detal según presentación.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Bottom Actions */}

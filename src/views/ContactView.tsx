@@ -29,7 +29,7 @@ export const ContactView: React.FC = () => {
       src: '/images/finca-paisaje-cafetal.jpg',
       title: 'Paisaje Cafetero & Hacienda',
       category: 'Vista Principal',
-      caption: 'Cafetales de ladera a 1.850 msnm cobijados por bosque andino y corredores biológicos.',
+      caption: 'Cafetales de ladera a 1.650 msnm cobijados por bosque andino y corredores biológicos.',
       alt: 'Paisaje panorámico de la finca cafetera y cafetales en la montaña',
     },
     {
@@ -213,7 +213,7 @@ export const ContactView: React.FC = () => {
                 <div>
                   <strong className="block text-[#2D1A0D] font-bold text-sm">Ubicación Finca & Cafetería:</strong>
                   <span className="text-slate-600 leading-relaxed">
-                    Vereda El Silencio, Km 4 Vía San Juan de Arama, Cordillera Central, Colombia (1.850 msnm).
+                    Vereda El Silencio, Km 4 Vía San Juan de Arama, Cordillera Central, Colombia (1.650 msnm).
                   </span>
                 </div>
               </div>

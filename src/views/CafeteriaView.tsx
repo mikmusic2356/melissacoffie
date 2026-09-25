@@ -70,7 +70,7 @@ export const CafeteriaView: React.FC = () => {
             </div>
             <span className="flex items-center gap-1.5 bg-white/10 px-3.5 py-2 rounded-2xl backdrop-blur-md border border-[#FFD242]/30 text-[#FFD242] font-semibold">
               <MapPin className="w-3.5 h-3.5 text-[#FFD242]" />
-              <span>Mirador Principal de la Finca (1.850 msnm)</span>
+              <span>Mirador Principal de la Finca (1.650 msnm)</span>
             </span>
             <button
               onClick={() => setShowQRModal(true)}

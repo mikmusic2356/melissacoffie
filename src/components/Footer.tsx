@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
             <div>
               <h4 className="font-bold text-white text-base">Café de Altura SCA 88+</h4>
               <p className="text-xs text-amber-200/70 mt-1 leading-relaxed">
-                Polinizado por abejas melíferas en cafetales a 1.850 msnm con cosecha manual.
+                Polinizado por abejas melíferas en cafetales a 1.650 msnm con cosecha manual.
               </p>
             </div>
           </div>

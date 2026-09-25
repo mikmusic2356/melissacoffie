@@ -301,7 +301,7 @@ export const HomeView: React.FC = () => {
                   </div>
                   <div className="p-4 flex-1 flex flex-col justify-between">
                     <h4 className="font-extrabold text-[#2D1A0D] text-sm font-display mb-1">
-                      Taza SCA 88+ & Miel
+                      Taza de alta calidad
                     </h4>
                     <p className="text-xs text-[#5C381E] leading-relaxed">
                       Al tostar, el grano carameliza con notas florales a jazmín y miel silvestre. Paralelamente, la colmena produce miel pura de cafeto.
@@ -724,7 +724,7 @@ export const HomeView: React.FC = () => {
               <div className="p-5 rounded-[24px] bg-white border border-amber-200/70 shadow-sm space-y-2 text-xs">
                 <div className="flex items-center gap-2 font-bold text-[#2D1A0D]">
                   <MapPin className="w-4 h-4 text-[#3E2714]" />
-                  <span>Terraza Panorámica Melifera coffee (1.850 msnm)</span>
+                  <span>Terraza Panorámica Melifera coffee (1.650 msnm)</span>
                 </div>
                 <div className="space-y-1 text-slate-700">
                   <div className="flex items-center gap-1.5 font-bold text-[#A16207]">

@@ -35,7 +35,7 @@ export const CafeteriaSpacesGallery: React.FC = () => {
       title: 'Terraza & Mirador Panorámico 360°',
       subtitle: 'Contempla la cordillera andina y los cafetales en flor',
       description:
-        'Un espacio abierto privilegiado a 1.850 metros de altitud, con mesas campestres de madera y vista despejada a los cañones cafeteros. El lugar perfecto para saborear una taza de café recién extraído mientras se respira el aire puro de la montaña.',
+        'Un espacio abierto privilegiado a 1.650 metros de altitud, con mesas campestres de madera y vista despejada a los cañones cafeteros. El lugar perfecto para saborear una taza de café recién extraído mientras se respira el aire puro de la montaña.',
       imageUrl: '/images/finca-paisaje-cafetal.jpg',
       tag: 'Espacio Abierto',
       features: ['Vista panorámica', 'Pet friendly', 'Conexión con la naturaleza', 'Servicio a la mesa'],

@@ -23,7 +23,7 @@ export const AboutView: React.FC = () => {
             La presencia de nuestras colmenas en el cafetal eleva la calidad del grano y produce miel virgen extraordinaria.
           </p>
           <p className="text-amber-100/90 text-sm sm:text-base leading-relaxed">
-            Nacimos en las altas laderas andinas a 1.850 metros de altitud con un propósito agronómico claro: integrar apiarios orgánicos directamente en los lotes de café arábica. El resultado es un café con mayor dulzor, densidad y uniformidad, cosechado en armonía con la naturaleza.
+            Nacimos en las altas laderas andinas a 1.650 metros de altitud con un propósito agronómico claro: integrar apiarios orgánicos directamente en los lotes de café arábica. El resultado es un café con mayor dulzor, densidad y uniformidad, cosechado en armonía con la naturaleza.
           </p>
 
           {/* Quick Contact Badge on Hero */}
@@ -336,7 +336,7 @@ export const AboutView: React.FC = () => {
             <div className="p-4 flex-1 flex flex-col justify-between space-y-1">
               <h4 className="font-bold text-xs text-[#2D1A0D] font-display">Ecosistema Andino</h4>
               <p className="text-[11px] text-[#5C381E] leading-relaxed">
-                Cafetales sembrados a 1.850 msnm cobijados por bosque nativo y corredores biológicos.
+                Cafetales sembrados a 1.650 msnm cobijados por bosque nativo y corredores biológicos.
               </p>
             </div>
           </div>
