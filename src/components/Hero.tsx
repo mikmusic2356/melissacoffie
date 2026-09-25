@@ -80,21 +80,6 @@ export const Hero: React.FC = () => {
     }
   };
 
-  const heroStats = [
-    {
-      title: '100% Virgen',
-      subtitle: 'Miel de Flor de Café',
-    },
-    {
-      title: '1.650 m',
-      subtitle: 'Cafetales de Altura',
-    },
-    {
-      title: 'Nacional',
-      subtitle: 'Envíos a Toda Colombia',
-    },
-  ];
-
   return (
     <section 
       onDragOver={handleDragOver}
@@ -102,7 +87,7 @@ export const Hero: React.FC = () => {
       onDrop={handleDrop}
       className="relative w-full overflow-hidden bg-[#180D05] text-white border-b-4 border-[#FFD242]"
     >
-      {/* Full-bleed Hero Background: Cloudflare R2 Video in Loop */}
+      {/* Full-bleed Hero Background: Looping Video */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         {customMedia?.type === 'image' ? (
           <img
@@ -124,7 +109,7 @@ export const Hero: React.FC = () => {
         )}
         
         {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/50 pointer-events-none" />
       </div>
 
       {/* Drag and Drop Active Overlay on entire Hero */}
@@ -171,7 +156,7 @@ export const Hero: React.FC = () => {
           <button
             type="button"
             onClick={resetToDefault}
-            title="Restablecer al video de Cloudflare predeterminado"
+            title="Restablecer al video original predeterminado"
             className="p-2 rounded-2xl bg-[#2D1A0D]/90 hover:bg-[#3E2714] text-amber-200 hover:text-white border border-[#FFD242]/40 text-xs shadow-xl cursor-pointer transition-all backdrop-blur-md"
           >
             ↺
@@ -179,26 +164,8 @@ export const Hero: React.FC = () => {
         )}
       </div>
 
-      {/* Hero Content Area with Stat Badges / Cards */}
-      <div className="relative w-full min-h-[380px] sm:min-h-[460px] md:min-h-[520px] lg:min-h-[580px] z-10 flex flex-col justify-end px-4 sm:px-6 lg:px-12 pb-6 sm:pb-8 pt-20">
-        <div className="w-full max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            {heroStats.map((stat, idx) => (
-              <div 
-                key={idx}
-                className="bg-[#1C1008]/85 backdrop-blur-md border border-[#FFD242]/40 hover:border-[#FFD242] transition-all duration-300 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 md:p-5 text-center shadow-2xl flex flex-col items-center justify-center group"
-              >
-                <div className="text-lg sm:text-xl md:text-2xl font-black text-[#FFD242] tracking-tight group-hover:scale-105 transition-transform duration-200">
-                  {stat.title}
-                </div>
-                <div className="text-[11px] sm:text-xs md:text-sm font-medium text-amber-100/90 mt-0.5 sm:mt-1 tracking-wide">
-                  {stat.subtitle}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Clean Hero Viewport Height */}
+      <div className="relative w-full min-h-[360px] sm:min-h-[440px] md:min-h-[500px] lg:min-h-[560px] z-10" />
     </section>
   );
 };
