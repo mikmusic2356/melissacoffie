@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Star, ShoppingCart, FileText, Check, ShieldCheck, MapPin, Award } from 'lucide-react';
+import { X, Star, ShoppingCart, FileText, Check, ShieldCheck, MapPin, Award, Share2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const ProductDetailModal: React.FC = () => {
@@ -9,6 +9,7 @@ export const ProductDetailModal: React.FC = () => {
     addToCart,
     setSelectedProductForQuote,
     categories,
+    copyShareLink,
   } = useApp();
 
   const [quantity, setQuantity] = useState(1);
@@ -42,14 +43,23 @@ export const ProductDetailModal: React.FC = () => {
       }}
     >
       <div className="relative bg-white rounded-[24px] sm:rounded-[32px] max-w-3xl w-full max-h-[92vh] sm:max-h-[90vh] shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
-        {/* Close button - Always accessible with high z-index and touch target */}
-        <button
-          onClick={() => setSelectedProductForDetail(null)}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 p-2 sm:p-2.5 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-lg border border-slate-200 min-w-[42px] min-h-[42px] flex items-center justify-center transition cursor-pointer active:scale-95"
-          aria-label="Cerrar ventana"
-        >
-          <X className="w-5 h-5 text-slate-800" />
-        </button>
+        {/* Top actions: Share and Close */}
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex items-center gap-2">
+          <button
+            onClick={() => copyShareLink(`#producto/${product.id}`, product.name)}
+            className="p-2 sm:p-2.5 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-lg border border-slate-200 min-w-[42px] min-h-[42px] flex items-center justify-center transition cursor-pointer active:scale-95 hover:text-[#2D1A0D] hover:bg-[#FFD242]"
+            title="Copiar enlace para compartir producto"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setSelectedProductForDetail(null)}
+            className="p-2 sm:p-2.5 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-lg border border-slate-200 min-w-[42px] min-h-[42px] flex items-center justify-center transition cursor-pointer active:scale-95"
+            aria-label="Cerrar ventana"
+          >
+            <X className="w-5 h-5 text-slate-800" />
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-y-auto">
           {/* Media column - Constrained on mobile so it doesn't push content offscreen */}

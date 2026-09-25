@@ -16,7 +16,8 @@ import {
   Check,
   CalendarCheck,
   Sparkles,
-  Info
+  Info,
+  Share2
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { FarmEvent, EventScheduleSlot } from '../types';
@@ -30,6 +31,7 @@ export const EventBookingModal: React.FC = () => {
     lastConsultedEmail,
     setLastConsultedEmail,
     setActiveView,
+    copyShareLink,
   } = useApp();
 
   // Contact Info (Name, Phone, Email first as requested)
@@ -177,13 +179,22 @@ END:VCALENDAR`;
             </span>
             <h2 className="text-base sm:text-lg font-bold mt-1 text-white font-display line-clamp-1">{event.title}</h2>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800 transition cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center border border-slate-700/50"
-            aria-label="Cerrar modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => copyShareLink(`#evento/${event.id}`, event.title)}
+              className="p-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800 transition cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center border border-slate-700/50 hover:border-amber-400 hover:text-amber-300"
+              title="Copiar enlace para compartir experiencia"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleClose}
+              className="p-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800 transition cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center border border-slate-700/50"
+              aria-label="Cerrar modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {isBooked && createdBooking ? (

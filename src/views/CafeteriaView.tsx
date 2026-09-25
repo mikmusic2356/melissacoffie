@@ -14,12 +14,13 @@ import {
   Calendar,
   MessageCircle,
   Instagram,
-  ArrowRight
+  ArrowRight,
+  Share2,
 } from 'lucide-react';
 import { CafeteriaSpacesGallery } from '../components/CafeteriaSpacesGallery';
 
 export const CafeteriaView: React.FC = () => {
-  const { cafeteriaMenu, setActiveView } = useApp();
+  const { cafeteriaMenu, setActiveView, copyShareLink } = useApp();
   const [activeTab, setActiveTab] = useState<'all' | 'calientes' | 'frias' | 'pasteleria' | 'brunch'>('all');
   const [showQRModal, setShowQRModal] = useState(false);
 
@@ -73,6 +74,14 @@ export const CafeteriaView: React.FC = () => {
               <span>Mirador Principal de la Finca (1.650 msnm)</span>
             </span>
             <button
+              onClick={() => copyShareLink('#menu-cafeteria', 'Carta & Menú Cafetería')}
+              className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3.5 py-2 rounded-2xl font-bold backdrop-blur-md transition cursor-pointer border border-white/20 shadow-xs"
+              title="Copiar enlace para compartir el menú"
+            >
+              <Share2 className="w-3.5 h-3.5 text-[#FFD242]" />
+              <span>Compartir Menú</span>
+            </button>
+            <button
               onClick={() => setShowQRModal(true)}
               className="flex items-center gap-1.5 bg-[#FFD242] text-[#2D1A0D] px-3.5 py-2 rounded-2xl font-bold hover:bg-[#F5C72E] transition cursor-pointer shadow-xs"
             >
@@ -93,7 +102,7 @@ export const CafeteriaView: React.FC = () => {
       </div>
 
       {/* Category Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 border-b border-slate-200">
+      <div id="menu-carta" className="flex items-center gap-2 overflow-x-auto pb-3 border-b border-slate-200 scroll-mt-28">
         {categories.map((cat) => {
           const isActive = activeTab === cat.id;
           return (

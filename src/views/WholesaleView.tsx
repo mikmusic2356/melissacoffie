@@ -14,26 +14,34 @@ import {
   Truck,
   Layers,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Send,
 } from 'lucide-react';
 import { Product } from '../types';
 
 export const WholesaleView: React.FC = () => {
-  const { products, createQuoteRequest, currentUser } = useApp();
+  const { products, createQuoteRequest, lastConsultedEmail, lastConsultedCedula } = useApp();
 
   const [selectedProductId, setSelectedProductId] = useState<string>(products[0]?.id || '');
   const [quantity, setQuantity] = useState<number>(50);
   const [frequency, setFrequency] = useState<'once' | 'monthly' | 'quarterly'>('monthly');
   const [customPackaging, setCustomPackaging] = useState<boolean>(true);
-  const [targetDate, setTargetDate] = useState<string>('2026-10-01');
+  
+  // Default target date 15 days ahead
+  const defaultTargetDate = () => {
+    const d = new Date(Date.now() + 15 * 86400000);
+    return d.toISOString().split('T')[0];
+  };
+  const [targetDate, setTargetDate] = useState<string>(defaultTargetDate());
   const [comments, setComments] = useState<string>('');
 
   // Contact form
-  const [customerName, setCustomerName] = useState<string>(currentUser.name);
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerDocument, setCustomerDocument] = useState<string>(lastConsultedCedula || '');
   const [companyName, setCompanyName] = useState<string>('');
-  const [email, setEmail] = useState<string>(currentUser.email);
-  const [phone, setPhone] = useState<string>(currentUser.phone);
-  const [city, setCity] = useState<string>('Bogotá D.C.');
+  const [email, setEmail] = useState<string>(lastConsultedEmail || '');
+  const [phone, setPhone] = useState<string>('');
+  const [city, setCity] = useState<string>('');
 
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [submittedQuoteId, setSubmittedQuoteId] = useState<string>('');
@@ -69,18 +77,19 @@ export const WholesaleView: React.FC = () => {
     if (!currentProd) return;
 
     const quote = createQuoteRequest({
-      customerName,
-      companyName: companyName || 'Cliente Mayorista',
-      email,
-      phone,
-      city,
+      customerName: customerName.trim(),
+      customerDocument: customerDocument.trim() || undefined,
+      companyName: companyName.trim() || 'Cliente Mayorista',
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      city: city.trim(),
       productId: currentProd.id,
       productName: currentProd.name,
       requestedQuantity: quantity,
       frequency,
       customPackagingNeeded: customPackaging,
       targetDate,
-      comments,
+      comments: comments.trim(),
       estimatedUnitPrice: quoteCalculations.unitPrice,
       estimatedTotal: quoteCalculations.total,
     });
@@ -222,12 +231,41 @@ export const WholesaleView: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => setIsSubmitted(false)}
-              className="px-6 py-2.5 rounded-full bg-[#0F172A] text-white font-bold text-xs hover:bg-slate-800 transition cursor-pointer shadow-sm"
-            >
-              Realizar otra cotización
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-md mx-auto">
+              {(() => {
+                const text = `🍯 *NUEVA SOLICITUD DE COTIZACIÓN MAYORISTA - MELÍFERA COFFEE* ☕\n\n` +
+                  `📌 *Radicado:* ${submittedQuoteId}\n` +
+                  `👤 *Cliente / Contacto:* ${customerName}\n` +
+                  `🏢 *Empresa / Negocio:* ${companyName || 'N/A'}\n` +
+                  `📱 *Teléfono:* ${phone}\n` +
+                  `📍 *Ciudad / Destino:* ${city}\n\n` +
+                  `📦 *Producto:* ${currentProd.name}\n` +
+                  `⚖️ *Cantidad solicitada:* ${quantity} kg / unidades\n` +
+                  `🔄 *Frecuencia estimada:* ${frequency}\n` +
+                  `💰 *Precio Unitario Estimado:* ${formatCOP(quoteCalculations.unitPrice)}\n` +
+                  `💵 *Total Estimado:* ${formatCOP(quoteCalculations.total)}\n` +
+                  (comments ? `💬 *Comentarios:* ${comments}\n\n` : `\n`) +
+                  `_Hola equipo Melífera, acabo de registrar esta cotización en la plataforma y deseo agilizar la atención y coordinar detalles._`;
+                const waUrl = `https://wa.me/573043785413?text=${encodeURIComponent(text)}`;
+                return (
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-md shadow-emerald-600/20 active:scale-[0.99]"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Notificar por WhatsApp a la Finca</span>
+                  </a>
+                );
+              })()}
+              <button
+                onClick={() => setIsSubmitted(false)}
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#0F172A] text-white font-bold text-xs hover:bg-slate-800 transition cursor-pointer shadow-sm"
+              >
+                Realizar otra cotización
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 sm:p-10 space-y-8">
@@ -363,13 +401,28 @@ export const WholesaleView: React.FC = () => {
                       required
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Tu nombre completo"
                       className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#6F4E37] focus:border-[#6F4E37] focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">Razón Social / Nombre Comercial</label>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">Cédula o NIT <span className="text-slate-400 font-normal">(Opcional)</span></label>
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      value={customerDocument}
+                      onChange={(e) => setCustomerDocument(e.target.value)}
+                      placeholder="Ej. 1020456789 o 901234567-1"
+                      className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#6F4E37] focus:border-[#6F4E37] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">Razón Social / Empresa <span className="text-slate-400 font-normal">(Opcional)</span></label>
                   <div className="relative">
                     <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     <input
@@ -391,6 +444,7 @@ export const WholesaleView: React.FC = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      placeholder="tu.correo@ejemplo.com"
                       className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#6F4E37] focus:border-[#6F4E37] focus:outline-none"
                     />
                   </div>
@@ -405,12 +459,13 @@ export const WholesaleView: React.FC = () => {
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Ej. 312 345 6789"
                       className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#6F4E37] focus:border-[#6F4E37] focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">Ciudad o Municipio de Entrega *</label>
                   <div className="relative">
                     <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />

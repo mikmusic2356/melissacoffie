@@ -13,12 +13,13 @@ import {
   Coffee,
   Layers,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Share2
 } from 'lucide-react';
 import { EventSeason, FarmEvent } from '../types';
 
 export const EventsView: React.FC = () => {
-  const { events, setSelectedEventForBooking, setActiveView } = useApp();
+  const { events, setSelectedEventForBooking, setActiveView, copyShareLink } = useApp();
   const [selectedSeason, setSelectedSeason] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
@@ -197,7 +198,7 @@ export const EventsView: React.FC = () => {
                     </div>
 
                     {/* Price and CTA */}
-                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
                       <div>
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-bold">
                           Inversión por persona
@@ -207,14 +208,23 @@ export const EventsView: React.FC = () => {
                         </span>
                       </div>
 
-                      <button
-                        onClick={() => setSelectedEventForBooking(evt)}
-                        disabled={availableSpots === 0}
-                        className="px-6 py-2.5 rounded-full bg-[#6F4E37] text-white font-bold text-xs hover:bg-[#5C3F2C] transition-colors flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-40"
-                      >
-                        <span>{availableSpots > 0 ? 'Reservar & Pagar' : 'Cupos Agotados'}</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => copyShareLink(`#evento/${evt.id}`, evt.title)}
+                          className="p-2.5 rounded-full bg-slate-100 hover:bg-[#FFD242] hover:text-[#2D1A0D] text-slate-700 transition cursor-pointer shadow-2xs"
+                          title="Copiar enlace para compartir evento"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setSelectedEventForBooking(evt)}
+                          disabled={availableSpots === 0}
+                          className="px-5 py-2.5 rounded-full bg-[#6F4E37] text-white font-bold text-xs hover:bg-[#5C3F2C] transition-colors flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-40"
+                        >
+                          <span>{availableSpots > 0 ? 'Reservar & Pagar' : 'Cupos Agotados'}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

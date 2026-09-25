@@ -22,12 +22,13 @@ import { WholesaleView } from './views/WholesaleView';
 import { CafeteriaView } from './views/CafeteriaView';
 import { UserDashboardView } from './views/UserDashboardView';
 import { AdminDashboardView } from './views/AdminDashboardView';
+import { AdminLoginView } from './views/AdminLoginView';
 import { AboutView } from './views/AboutView';
 import { ContactView } from './views/ContactView';
 import { PrivacyView } from './views/PrivacyView';
 
 const MainContent: React.FC = () => {
-  const { activeView } = useApp();
+  const { activeView, isAdminAuthenticated } = useApp();
 
   const renderCurrentView = () => {
     switch (activeView) {
@@ -44,7 +45,7 @@ const MainContent: React.FC = () => {
       case 'mis-reservas':
         return <UserDashboardView />;
       case 'admin':
-        return <AdminDashboardView />;
+        return isAdminAuthenticated ? <AdminDashboardView /> : <AdminLoginView />;
       case 'nosotros':
         return <AboutView />;
       case 'contacto':

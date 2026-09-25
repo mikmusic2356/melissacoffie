@@ -85,17 +85,7 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFD242] text-[#2D1A0D] hover:bg-[#ecc030] transition font-black text-[11px] cursor-pointer shadow-2xs"
             >
               <UserCheck className="w-3.5 h-3.5 text-[#2D1A0D]" />
-              <span>Consultar por Correo</span>
-            </button>
-
-            <span className="text-amber-700/60 hidden sm:inline">|</span>
-
-            <button
-              onClick={() => handleNavClick('admin')}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#3E2714] hover:bg-[#4E321B] text-amber-100 transition font-bold text-[11px] cursor-pointer border border-amber-800/40"
-            >
-              <ShieldAlert className="w-3.5 h-3.5 text-[#FFD242]" />
-              <span>Admin {pendingQuotesCount > 0 && `(${pendingQuotesCount})`}</span>
+              <span>Consultar por Correo / Cédula</span>
             </button>
           </div>
         </div>
@@ -248,20 +238,13 @@ export const Navbar: React.FC = () => {
               </a>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div>
               <button
                 onClick={() => handleNavClick('mis-reservas')}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#2D1A0D] text-[#FFD242] font-black text-xs shadow-xs"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#2D1A0D] text-[#FFD242] font-black text-xs shadow-xs"
               >
                 <UserCheck className="w-4 h-4 text-[#FFD242]" />
-                <span>Con Cédula</span>
-              </button>
-              <button
-                onClick={() => handleNavClick('admin')}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#FFD242] text-[#2D1A0D] font-black text-xs border border-[#ECC030]"
-              >
-                <ShieldAlert className="w-4 h-4 text-[#2D1A0D]" />
-                <span>Admin</span>
+                <span>Consultar Pedidos & Reservas con Cédula</span>
               </button>
             </div>
           </div>

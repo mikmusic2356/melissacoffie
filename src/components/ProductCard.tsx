@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, FileText, Star, Eye, Layers } from 'lucide-react';
+import { ShoppingCart, FileText, Star, Eye, Layers, Share2 } from 'lucide-react';
 import { Product } from '../types';
 import { useApp } from '../context/AppContext';
 
@@ -13,6 +13,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     setSelectedProductForQuote,
     setSelectedProductForDetail,
     categories,
+    copyShareLink,
   } = useApp();
 
   const formatCOP = (val: number) => {
@@ -48,14 +49,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
 
-        {/* Quick view button */}
-        <button
-          onClick={() => setSelectedProductForDetail(product)}
-          className="absolute bottom-3 right-3 p-2.5 rounded-full bg-white/95 text-slate-800 shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-[#FFD242] hover:text-[#2D1A0D] hover:scale-110 cursor-pointer"
-          title="Ver Ficha Técnica"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
+        {/* Action buttons on media hover */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+          <button
+            onClick={() => copyShareLink(`#producto/${product.id}`, product.name)}
+            className="p-2.5 rounded-full bg-white/95 text-slate-800 shadow-md hover:bg-[#FFD242] hover:text-[#2D1A0D] hover:scale-110 transition cursor-pointer"
+            title="Copiar enlace para compartir producto"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setSelectedProductForDetail(product)}
+            className="p-2.5 rounded-full bg-white/95 text-slate-800 shadow-md hover:bg-[#FFD242] hover:text-[#2D1A0D] hover:scale-110 transition cursor-pointer"
+            title="Ver Ficha Técnica"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Origin Pill if coffee */}
         {product.origin && (

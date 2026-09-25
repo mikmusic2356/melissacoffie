@@ -8,6 +8,8 @@ import {
   CafeteriaMenuItem,
   CartItem,
   GeneratedAIImage,
+  RetailOrder,
+  OrderStatus,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -16,6 +18,7 @@ import {
   INITIAL_CAFETERIA_MENU,
   INITIAL_QUOTES,
   INITIAL_BOOKINGS,
+  INITIAL_ORDERS,
 } from '../data/initialData';
 
 export type ActiveView =
@@ -35,6 +38,7 @@ export type AdminTab =
   | 'productos'
   | 'categorias'
   | 'eventos'
+  | 'pedidos'
   | 'cotizaciones'
   | 'reservas'
   | 'ia-estudio';
@@ -52,6 +56,14 @@ interface AppContextType {
   setActiveView: (view: ActiveView) => void;
   adminTab: AdminTab;
   setAdminTab: (tab: AdminTab) => void;
+
+  // Admin 3-Factor Authentication
+  isAdminAuthenticated: boolean;
+  adminLogin: (username: string, password: string, masterKey: string) => { success: boolean; error?: string };
+  adminLogout: () => void;
+
+  // Share link helper
+  copyShareLink: (pathOrHash: string, label: string) => void;
 
   // Products
   products: Product[];
@@ -89,6 +101,12 @@ interface AppContextType {
   addMenuItem: (item: Omit<CafeteriaMenuItem, 'id'>) => void;
   updateMenuItem: (id: string, updates: Partial<CafeteriaMenuItem>) => void;
   deleteMenuItem: (id: string) => void;
+
+  // Retail Orders (Pedidos por Unidad / Contraentrega)
+  orders: RetailOrder[];
+  createOrder: (orderData: Omit<RetailOrder, 'id' | 'createdAt'>) => Promise<RetailOrder>;
+  updateOrderStatus: (orderId: string, status: OrderStatus, notes?: string) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
 
   // Cart
   cart: CartItem[];
@@ -138,6 +156,7 @@ const LOCAL_STORAGE_KEYS = {
   QUOTES: 'finca_quotes_v2',
   IMAGES: 'finca_ai_images_v2',
   CAFETERIA: 'finca_cafeteria_menu_v2',
+  ORDERS: 'finca_orders_v2',
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -145,6 +164,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [adminTab, setAdminTab] = useState<AdminTab>('resumen');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Admin 3-Factor Authentication
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('melifera_admin_session') === 'true';
+  });
+
+  const adminLogin = (user: string, pass: string, masterKey: string) => {
+    const validUsers = ['melifera_admin', 'melifera', 'admin@meliferacoffee.com', 'admin'];
+    const validPass = 'Melifera2026*';
+    const validMasterKey = 'MLF-MASTER-885';
+
+    const cleanUser = user.trim().toLowerCase();
+    const cleanPass = pass.trim();
+    const cleanKey = masterKey.trim();
+
+    if (!validUsers.includes(cleanUser)) {
+      return { success: false, error: 'Usuario administrador incorrecto' };
+    }
+    if (cleanPass !== validPass) {
+      return { success: false, error: 'Contraseña de administrador incorrecta' };
+    }
+    if (cleanKey !== validMasterKey) {
+      return { success: false, error: 'Llave Maestra de Seguridad incorrecta o inválida' };
+    }
+
+    sessionStorage.setItem('melifera_admin_session', 'true');
+    setIsAdminAuthenticated(true);
+    showToast('Acceso Concedido', 'Sesión administrativa iniciada con Llave Maestra validada.', 'success');
+    return { success: true };
+  };
+
+  const adminLogout = () => {
+    sessionStorage.removeItem('melifera_admin_session');
+    setIsAdminAuthenticated(false);
+    setActiveView('inicio');
+    window.location.hash = '#inicio';
+    showToast('Sesión Cerrada', 'Has cerrado la sesión de administración de forma segura.', 'info');
+  };
+
+  const copyShareLink = (pathOrHash: string, label: string) => {
+    const cleanHash = pathOrHash.startsWith('#') ? pathOrHash : `#${pathOrHash.replace(/^\//, '')}`;
+    const fullUrl = `${window.location.origin}${window.location.pathname}${cleanHash}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        showToast('Enlace Copiado', `Enlace de "${label}" copiado al portapapeles. Listo para compartir.`, 'success');
+      }).catch(() => {
+        showToast('Enlace para compartir', fullUrl, 'info');
+      });
+    } else {
+      showToast('Enlace para compartir', fullUrl, 'info');
+    }
+  };
 
   // Modal helpers
   const [selectedProductForQuote, setSelectedProductForQuote] = useState<Product | null>(null);
@@ -225,6 +296,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_QUOTES;
   });
 
+  const [orders, setOrders] = useState<RetailOrder[]>(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.ORDERS);
+    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+  });
+
   const [generatedImages, setGeneratedImages] = useState<GeneratedAIImage[]>(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.IMAGES);
     return saved ? JSON.parse(saved) : [];
@@ -240,13 +316,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     async function loadTursoData() {
       try {
-        const [prodRes, catRes, evtRes, bookRes, quoteRes, menuRes] = await Promise.all([
+        const [prodRes, catRes, evtRes, bookRes, quoteRes, menuRes, orderRes] = await Promise.all([
           fetch('/api/products').then((r) => (r.ok ? r.json() : null)),
           fetch('/api/categories').then((r) => (r.ok ? r.json() : null)),
           fetch('/api/events').then((r) => (r.ok ? r.json() : null)),
           fetch('/api/bookings').then((r) => (r.ok ? r.json() : null)),
           fetch('/api/quotes').then((r) => (r.ok ? r.json() : null)),
           fetch('/api/cafeteria-menu').then((r) => (r.ok ? r.json() : null)),
+          fetch('/api/orders').then((r) => (r.ok ? r.json() : null)),
         ]);
 
         if (prodRes && prodRes.length > 0) setProducts(prodRes);
@@ -255,6 +332,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (bookRes && bookRes.length > 0) setBookings(bookRes);
         if (quoteRes && quoteRes.length > 0) setQuotes(quoteRes);
         if (menuRes && menuRes.length > 0) setCafeteriaMenu(menuRes);
+        if (orderRes && orderRes.length > 0) setOrders(orderRes);
         console.log('⚡ Turso DB synchronized into AppContext state!');
       } catch (loadErr) {
         console.warn('Using cached local storage while connecting to Turso:', loadErr);
@@ -286,12 +364,101 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [quotes]);
 
   useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+  }, [orders]);
+
+  useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEYS.IMAGES, JSON.stringify(generatedImages));
   }, [generatedImages]);
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEYS.CAFETERIA, JSON.stringify(cafeteriaMenu));
   }, [cafeteriaMenu]);
+
+  // Bidirectional URL route sync (Supports #hash, pathname and query parameters)
+  useEffect(() => {
+    const syncRouteFromLocation = () => {
+      const hash = window.location.hash.replace(/^#\/?/, '').trim();
+      const path = window.location.pathname.replace(/^\//, '').trim();
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const target = hash || path;
+      const targetLower = target.toLowerCase();
+
+      // Check admin discreet route
+      if (targetLower === 'admincoffe' || targetLower === 'admin' || targetLower.startsWith('admincoffe')) {
+        setActiveView('admin');
+        return;
+      }
+
+      // Check for shareable product link (e.g. #producto/p-1, /producto/p-1, or ?producto=p-1)
+      const productQuery = searchParams.get('producto') || searchParams.get('product');
+      if (targetLower.startsWith('producto/') || targetLower.startsWith('product/') || productQuery) {
+        const prodId = productQuery || target.split('/')[1];
+        if (prodId) {
+          const found = products.find((p) => p.id.toLowerCase() === prodId.toLowerCase());
+          setActiveView('tienda');
+          if (found) {
+            setSelectedProductForDetail(found);
+          }
+        }
+        return;
+      }
+
+      // Check for shareable event link (e.g. #evento/ev-1, /evento/ev-1, or ?evento=ev-1)
+      const eventQuery = searchParams.get('evento') || searchParams.get('event');
+      if (targetLower.startsWith('evento/') || targetLower.startsWith('event/') || eventQuery) {
+        const evtId = eventQuery || target.split('/')[1];
+        if (evtId) {
+          const found = events.find((e) => e.id.toLowerCase() === evtId.toLowerCase());
+          setActiveView('eventos');
+          if (found) {
+            setSelectedEventForBooking(found);
+          }
+        }
+        return;
+      }
+
+      // Check for cafeteria menu link
+      if (targetLower === 'menu-cafeteria' || targetLower === 'menu' || targetLower === 'carta') {
+        setActiveView('cafeteria');
+        setTimeout(() => {
+          const el = document.getElementById('menu-carta') || document.getElementById('carta-menu');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 250);
+        return;
+      }
+
+      // Standard public views
+      if (targetLower === 'tienda' || targetLower === 'catalogo' || targetLower === 'cafe' || targetLower === 'miel') {
+        setActiveView('tienda');
+      } else if (targetLower === 'eventos' || targetLower === 'catas' || targetLower === 'experiencias') {
+        setActiveView('eventos');
+      } else if (targetLower === 'cotizaciones' || targetLower === 'mayoristas' || targetLower === 'b2b') {
+        setActiveView('cotizaciones');
+      } else if (targetLower === 'cafeteria') {
+        setActiveView('cafeteria');
+      } else if (targetLower === 'nosotros' || targetLower === 'origen' || targetLower === 'finca') {
+        setActiveView('nosotros');
+      } else if (targetLower === 'contacto' || targetLower === 'ubicacion') {
+        setActiveView('contacto');
+      } else if (targetLower === 'mis-reservas' || targetLower === 'consultar' || targetLower === 'pedidos') {
+        setActiveView('mis-reservas');
+      } else if (targetLower === 'privacidad' || targetLower === 'politicas') {
+        setActiveView('politicas');
+      } else if (targetLower === 'inicio' || targetLower === '') {
+        setActiveView('inicio');
+      }
+    };
+
+    syncRouteFromLocation();
+    window.addEventListener('hashchange', syncRouteFromLocation);
+    window.addEventListener('popstate', syncRouteFromLocation);
+    return () => {
+      window.removeEventListener('hashchange', syncRouteFromLocation);
+      window.removeEventListener('popstate', syncRouteFromLocation);
+    };
+  }, [products, events]);
 
   // Toast handler
   const showToast = (title: string, message: string, type: 'success' | 'info' | 'warning' = 'success') => {
@@ -580,7 +747,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Quotes
   const createQuoteRequest = (quoteData: Omit<WholesaleQuoteRequest, 'id' | 'status' | 'createdAt'>): WholesaleQuoteRequest => {
-    const id = `COT-2026-${String(quotes.length + 1).padStart(3, '0')}`;
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const id = `COT-2026-${randomSuffix}`;
     const newQuote: WholesaleQuoteRequest = {
       ...quoteData,
       id,
@@ -588,6 +756,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
     };
 
+    if (quoteData.email) {
+      setLastConsultedEmail(quoteData.email.trim().toLowerCase());
+    }
     if (quoteData.customerDocument) {
       setLastConsultedCedula(quoteData.customerDocument);
     }
@@ -661,6 +832,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     fetch(`/api/cafeteria-menu/${id}`, { method: 'DELETE' }).catch((err) => console.warn('Turso sync error (deleteMenuItem):', err));
   };
 
+  // Retail Orders (Contraentrega)
+  const createOrder = async (orderData: Omit<RetailOrder, 'id' | 'createdAt'>): Promise<RetailOrder> => {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const newOrder: RetailOrder = {
+      ...orderData,
+      id: `ORD-2026-${randomSuffix}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    setOrders((prev) => [newOrder, ...prev]);
+
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder),
+    }).catch((err) => console.warn('Turso sync error (createOrder):', err));
+
+    return newOrder;
+  };
+
+  const updateOrderStatus = async (orderId: string, status: OrderStatus, notes?: string) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status, ...(notes !== undefined ? { notes } : {}) } : o))
+    );
+
+    showToast('Pedido Actualizado', `Estado cambiado a "${status}".`);
+
+    fetch(`/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, notes }),
+    }).catch((err) => console.warn('Turso sync error (updateOrderStatus):', err));
+  };
+
+  const deleteOrder = async (orderId: string) => {
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    showToast('Pedido Eliminado', 'El pedido fue retirado del registro.', 'warning');
+
+    fetch(`/api/orders/${orderId}`, {
+      method: 'DELETE',
+    }).catch((err) => console.warn('Turso sync error (deleteOrder):', err));
+  };
+
   // Cart
   const addToCart = (product: Product, quantity = 1, purchaseType: 'unit' | 'wholesale' = 'unit') => {
     setCart((prev) => {
@@ -705,6 +919,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveView,
         adminTab,
         setAdminTab,
+        isAdminAuthenticated,
+        adminLogin,
+        adminLogout,
+        copyShareLink,
         products,
         addProduct,
         updateProduct,
@@ -730,6 +948,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addMenuItem,
         updateMenuItem,
         deleteMenuItem,
+        orders,
+        createOrder,
+        updateOrderStatus,
+        deleteOrder,
         cart,
         addToCart,
         removeFromCart,

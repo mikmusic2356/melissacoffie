@@ -142,6 +142,39 @@ export interface CartItem {
   purchaseType: 'unit' | 'wholesale';
 }
 
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  productImage: string;
+  unitPrice: number;
+  quantity: number;
+  unitLabel: string;
+  purchaseType: 'unit' | 'wholesale';
+  total: number;
+}
+
+export type OrderStatus = 'pendiente' | 'confirmado' | 'en_camino' | 'entregado' | 'cancelado';
+
+export interface RetailOrder {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerDocument?: string;
+  department: string;
+  city: string;
+  address: string;
+  neighborhood?: string;
+  notes?: string;
+  paymentMethod: 'contraentrega';
+  items: OrderItem[];
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+  status: OrderStatus;
+  createdAt: string;
+}
+
 export type AspectRatioType = '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '9:16' | '16:9' | '21:9';
 
 export interface GeneratedAIImage {

@@ -18,13 +18,17 @@ import {
   CalendarCheck2,
   CalendarX,
   Info,
-  ArrowRight
+  ArrowRight,
+  ShoppingBag,
+  Truck,
+  Send,
 } from 'lucide-react';
 
 export const UserDashboardView: React.FC = () => {
   const {
     bookings,
     quotes,
+    orders,
     cancelBooking,
     currentUser,
     setActiveView,
@@ -35,7 +39,7 @@ export const UserDashboardView: React.FC = () => {
   // Search input state by EMAIL as requested (starts empty so user must input their email)
   const [emailInput, setEmailInput] = useState(lastConsultedEmail || '');
   const [activeSearchEmail, setActiveSearchEmail] = useState(lastConsultedEmail || '');
-  const [activeTab, setActiveTab] = useState<'reservas' | 'cotizaciones'>('reservas');
+  const [activeTab, setActiveTab] = useState<'reservas' | 'pedidos' | 'cotizaciones'>('reservas');
   const [bookingTimeFilter, setBookingTimeFilter] = useState<'all' | 'vigentes' | 'pasados'>('all');
   const [selectedTicketToView, setSelectedTicketToView] = useState<any>(null);
 
@@ -117,13 +121,26 @@ export const UserDashboardView: React.FC = () => {
     });
   }, [quotes, activeSearchEmail]);
 
+  // Filter orders ONLY for the searched email
+  const matchedOrders = useMemo(() => {
+    if (!activeSearchEmail) return [];
+    const target = activeSearchEmail.trim().toLowerCase();
+    return orders.filter((o) => {
+      const email = (o.customerEmail || '').trim().toLowerCase();
+      const code = (o.id || '').toLowerCase();
+      return email === target || code === target;
+    });
+  }, [orders, activeSearchEmail]);
+
   // Matched customer info
   const matchedCustomerName =
     matchedBookings[0]?.customerName ||
+    matchedOrders[0]?.customerName ||
     filteredQuotes[0]?.customerName;
 
   const matchedCustomerPhone =
     matchedBookings[0]?.customerPhone ||
+    matchedOrders[0]?.customerPhone ||
     filteredQuotes[0]?.phone;
 
   // Available sample emails for easy testing
@@ -132,11 +149,14 @@ export const UserDashboardView: React.FC = () => {
     bookings.forEach((b) => {
       if (b.customerEmail) emails.add(b.customerEmail.toLowerCase());
     });
+    orders.forEach((o) => {
+      if (o.customerEmail) emails.add(o.customerEmail.toLowerCase());
+    });
     quotes.forEach((q) => {
       if (q.email) emails.add(q.email.toLowerCase());
     });
     return Array.from(emails);
-  }, [bookings, quotes]);
+  }, [bookings, orders, quotes]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
@@ -255,7 +275,7 @@ export const UserDashboardView: React.FC = () => {
         )}
       </div>
 
-      {/* Primary Tabs: Reservas vs Cotizaciones */}
+      {/* Primary Tabs: Reservas vs Pedidos vs Cotizaciones */}
       <div className="flex items-center gap-6 border-b border-slate-200 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('reservas')}
@@ -268,6 +288,21 @@ export const UserDashboardView: React.FC = () => {
           <Calendar className="w-4 h-4 text-[#6F4E37]" />
           <span>Mis Reservas de Eventos ({matchedBookings.length})</span>
           {activeTab === 'reservas' && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6F4E37] rounded-full" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('pedidos')}
+          className={`pb-3 text-sm font-bold transition relative cursor-pointer flex items-center gap-2 shrink-0 ${
+            activeTab === 'pedidos'
+              ? 'text-[#0F172A]'
+              : 'text-slate-400 hover:text-slate-700'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4 text-[#6F4E37]" />
+          <span>Mis Pedidos Contraentrega ({matchedOrders.length})</span>
+          {activeTab === 'pedidos' && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6F4E37] rounded-full" />
           )}
         </button>
@@ -490,7 +525,111 @@ export const UserDashboardView: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: COTIZACIONES AL POR MAYOR */}
+      {/* TAB 2: PEDIDOS POR UNIDAD (CONTRAENTREGA) */}
+      {activeTab === 'pedidos' && (
+        <div className="space-y-6">
+          {matchedOrders.length === 0 ? (
+            <div className="p-12 sm:p-16 text-center bg-white rounded-[32px] border border-slate-100 space-y-4 shadow-sm">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                <ShoppingBag className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 font-display">
+                {activeSearchEmail
+                  ? `No se encontraron pedidos contraentrega asociados a ${activeSearchEmail}`
+                  : 'Ingresa tu correo arriba para consultar tus pedidos'}
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                {activeSearchEmail
+                  ? 'Si realizaste un pedido con otro correo o número, verifícalo arriba o explora la tienda.'
+                  : 'Escribe tu correo en la barra superior para consultar el estado de tus compras contraentrega.'}
+              </p>
+              <div className="pt-2 flex flex-wrap gap-2 justify-center">
+                <button
+                  onClick={() => setActiveView('tienda')}
+                  className="px-6 py-2.5 rounded-full bg-[#6F4E37] text-white font-bold text-xs hover:bg-[#5C3F2C] transition-colors cursor-pointer shadow-sm"
+                >
+                  Explorar Tienda & Comprar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {matchedOrders.map((order) => {
+                const statusBadge: Record<string, { bg: string; text: string; label: string }> = {
+                  pendiente: { bg: 'bg-amber-100', text: 'text-amber-900', label: 'En Preparación' },
+                  confirmado: { bg: 'bg-blue-100', text: 'text-blue-900', label: 'Confirmado por la Finca' },
+                  en_camino: { bg: 'bg-indigo-100', text: 'text-indigo-900', label: 'En Camino / Despachado' },
+                  entregado: { bg: 'bg-emerald-100', text: 'text-emerald-900', label: 'Entregado & Pagado' },
+                  cancelado: { bg: 'bg-rose-100', text: 'text-rose-900', label: 'Cancelado' },
+                };
+                const badge = statusBadge[order.status] || statusBadge.pendiente;
+
+                const dateFormatted = order.createdAt
+                  ? new Date(order.createdAt).toLocaleDateString('es-CO', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : 'N/D';
+
+                return (
+                  <div
+                    key={order.id}
+                    className="p-6 sm:p-7 rounded-[28px] bg-white border border-slate-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-md transition-shadow"
+                  >
+                    <div className="space-y-3 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-black text-[#6F4E37]">#{order.id}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.bg} ${badge.text}`}>
+                          {badge.label}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-[#2D1A0D] border border-amber-200">
+                          Contraentrega
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {dateFormatted}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm sm:text-base font-display">
+                          {order.items.map((item) => `${item.quantity}x ${item.productName}`).join(', ')}
+                        </h4>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                          <span>
+                            Destino: <strong>{order.address}, {order.city} ({order.department})</strong>
+                          </span>
+                          <span>•</span>
+                          <span>
+                            Destinatario: <strong>{order.customerName}</strong> ({order.customerPhone})
+                          </span>
+                        </div>
+                        {order.notes && (
+                          <p className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-xl border border-slate-100 italic">
+                            Nota: {order.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-left md:text-right md:border-l md:pl-6 md:border-slate-100 shrink-0 w-full md:w-auto space-y-1">
+                      <span className="text-[10px] text-slate-400 block font-medium">Total a Pagar al Recibir:</span>
+                      <span className="text-xl font-black text-emerald-700 font-display block">
+                        {formatCOP(order.total)}
+                      </span>
+                      <span className="text-[10px] text-slate-500 block">
+                        {order.items.reduce((acc, i) => acc + i.quantity, 0)} producto(s)
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: COTIZACIONES AL POR MAYOR */}
       {activeTab === 'cotizaciones' && (
         <div className="space-y-6">
           {filteredQuotes.length === 0 ? (

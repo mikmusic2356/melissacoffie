@@ -1,4 +1,4 @@
-import { Category, Product, FarmEvent, EventBooking, WholesaleQuoteRequest, CafeteriaMenuItem } from '../types';
+import { Category, Product, FarmEvent, EventBooking, WholesaleQuoteRequest, CafeteriaMenuItem, RetailOrder } from '../types';
 
 export const INITIAL_CATEGORIES: Category[] = [
   {
@@ -680,5 +680,78 @@ export const INITIAL_BOOKINGS: EventBooking[] = [
     bookingDate: '2026-07-28T09:30:00Z',
     qrCodeMock: 'QR-EVT-5421-FINCA-COFFEE',
     status: 'attended',
+  },
+];
+
+export const INITIAL_ORDERS: RetailOrder[] = [
+  {
+    id: 'ORD-2026-8491',
+    customerName: 'Carolina Montoya Restrepo',
+    customerEmail: 'carolina.montoya@gmail.com',
+    customerPhone: '+57 312 849 5521',
+    customerDocument: '1020485923',
+    department: 'Antioquia',
+    city: 'Medellín',
+    address: 'Calle 10 # 43E - 22, Apto 502',
+    neighborhood: 'El Poblado',
+    notes: 'Portería 24 horas, llamar al llegar.',
+    paymentMethod: 'contraentrega',
+    items: [
+      {
+        productId: 'prod-1',
+        productName: 'Café verde, bourbon rojo',
+        productImage: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=600&auto=format&fit=crop',
+        unitPrice: 48000,
+        quantity: 2,
+        unitLabel: 'Bolsa sellada al vacío',
+        purchaseType: 'unit',
+        total: 96000,
+      },
+      {
+        productId: 'prod-3',
+        productName: 'Miel Cruda de Flor de Cafeto (350g)',
+        productImage: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?q=80&w=600&auto=format&fit=crop',
+        unitPrice: 28000,
+        quantity: 1,
+        unitLabel: 'Frasco de vidrio 350g',
+        purchaseType: 'unit',
+        total: 28000,
+      },
+    ],
+    subtotal: 124000,
+    shippingCost: 0,
+    total: 124000,
+    status: 'en_camino',
+    createdAt: '2026-09-24T14:30:00.000Z',
+  },
+  {
+    id: 'ORD-2026-7204',
+    customerName: 'Andrés Felipe Morales',
+    customerEmail: 'andres.felipe.m@outlook.com',
+    customerPhone: '+57 315 762 1198',
+    customerDocument: '79845120',
+    department: 'Cundinamarca',
+    city: 'Bogotá',
+    address: 'Carrera 15 # 93 - 47, Oficina 301',
+    neighborhood: 'Chicó Norte',
+    notes: 'Entregar en horario de oficina 8am a 5pm.',
+    paymentMethod: 'contraentrega',
+    items: [
+      {
+        productId: 'prod-2',
+        productName: 'Café Tostado en Grano - Origen Único',
+        productImage: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?q=80&w=600&auto=format&fit=crop',
+        unitPrice: 42000,
+        quantity: 3,
+        unitLabel: 'Bolsa 340g con válvula desgasificadora',
+        purchaseType: 'unit',
+        total: 126000,
+      },
+    ],
+    subtotal: 126000,
+    shippingCost: 0,
+    total: 126000,
+    status: 'pendiente',
+    createdAt: '2026-09-25T09:15:00.000Z',
   },
 ];

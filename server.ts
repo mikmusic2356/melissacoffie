@@ -468,7 +468,8 @@ app.get("/api/quotes", async (_req, res) => {
 app.post("/api/quotes", async (req, res) => {
   try {
     const q = req.body;
-    const id = q.id || `COT-2026-${Date.now()}`;
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const id = q.id || `COT-2026-${randomSuffix}`;
     await turso.execute({
       sql: `INSERT INTO wholesale_quotes (
         id, customer_name, company_name, email, phone, customer_document,
@@ -476,8 +477,22 @@ app.post("/api/quotes", async (req, res) => {
         custom_packaging_needed, target_date, comments, estimated_unit_price, estimated_total, status, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
-        status=excluded.status,
-        comments=excluded.comments`,
+        customer_name=excluded.customer_name,
+        company_name=excluded.company_name,
+        email=excluded.email,
+        phone=excluded.phone,
+        customer_document=excluded.customer_document,
+        city=excluded.city,
+        product_id=excluded.product_id,
+        product_name=excluded.product_name,
+        requested_quantity=excluded.requested_quantity,
+        frequency=excluded.frequency,
+        custom_packaging_needed=excluded.custom_packaging_needed,
+        target_date=excluded.target_date,
+        comments=excluded.comments,
+        estimated_unit_price=excluded.estimated_unit_price,
+        estimated_total=excluded.estimated_total,
+        status=excluded.status`,
       args: [
         id,
         q.customerName,
@@ -574,6 +589,114 @@ app.delete("/api/cafeteria-menu/:id", async (req, res) => {
 
     await turso.execute({
       sql: "DELETE FROM cafeteria_menu WHERE id = ?",
+      args: [req.params.id],
+    });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 7. Retail Orders (Unit / Cash on Delivery)
+app.get("/api/orders", async (_req, res) => {
+  try {
+    const result = await turso.execute("SELECT * FROM orders ORDER BY created_at DESC");
+    const orders = result.rows.map((r: any) => ({
+      id: r.id,
+      customerName: r.customer_name,
+      customerEmail: r.customer_email,
+      customerPhone: r.customer_phone,
+      customerDocument: r.customer_document || undefined,
+      department: r.department,
+      city: r.city,
+      address: r.address,
+      neighborhood: r.neighborhood || undefined,
+      notes: r.notes || undefined,
+      paymentMethod: r.payment_method || "contraentrega",
+      items: r.items ? JSON.parse(r.items) : [],
+      subtotal: Number(r.subtotal),
+      shippingCost: Number(r.shipping_cost || 0),
+      total: Number(r.total),
+      status: r.status || "pendiente",
+      createdAt: r.created_at,
+    }));
+    res.json(orders);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/orders", async (req, res) => {
+  try {
+    const o = req.body;
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const id = o.id || `ORD-2026-${randomSuffix}`;
+    const createdAt = o.createdAt || new Date().toISOString();
+
+    await turso.execute({
+      sql: `INSERT INTO orders (
+        id, customer_name, customer_email, customer_phone, customer_document,
+        department, city, address, neighborhood, notes, payment_method,
+        items, subtotal, shipping_cost, total, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        status=excluded.status,
+        notes=excluded.notes`,
+      args: [
+        id,
+        o.customerName,
+        o.customerEmail,
+        o.customerPhone,
+        o.customerDocument || null,
+        o.department || "",
+        o.city || "",
+        o.address || "",
+        o.neighborhood || null,
+        o.notes || null,
+        o.paymentMethod || "contraentrega",
+        JSON.stringify(o.items || []),
+        Number(o.subtotal || 0),
+        Number(o.shippingCost || 0),
+        Number(o.total || 0),
+        o.status || "pendiente",
+        createdAt,
+      ],
+    });
+    res.json({ success: true, id, createdAt });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch("/api/orders/:id", async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    if (status && notes !== undefined) {
+      await turso.execute({
+        sql: "UPDATE orders SET status = ?, notes = ? WHERE id = ?",
+        args: [status, notes, req.params.id],
+      });
+    } else if (status) {
+      await turso.execute({
+        sql: "UPDATE orders SET status = ? WHERE id = ?",
+        args: [status, req.params.id],
+      });
+    } else if (notes !== undefined) {
+      await turso.execute({
+        sql: "UPDATE orders SET notes = ? WHERE id = ?",
+        args: [notes, req.params.id],
+      });
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/orders/:id", async (req, res) => {
+  try {
+    await turso.execute({
+      sql: "DELETE FROM orders WHERE id = ?",
       args: [req.params.id],
     });
     res.json({ success: true });

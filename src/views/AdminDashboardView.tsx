@@ -20,8 +20,19 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  ShoppingBag,
+  Truck,
+  MapPin,
+  Phone,
+  Mail,
+  User,
+  Send,
+  Eye,
+  LogOut,
+  Share2,
+  ExternalLink,
 } from 'lucide-react';
-import { Product, FarmEvent, Category, WholesaleQuoteRequest, CafeteriaMenuItem, EventScheduleSlot } from '../types';
+import { Product, FarmEvent, Category, WholesaleQuoteRequest, CafeteriaMenuItem, EventScheduleSlot, RetailOrder, OrderStatus } from '../types';
 import { ImageUploader } from '../components/ImageUploader';
 
 export const AdminDashboardView: React.FC = () => {
@@ -44,10 +55,20 @@ export const AdminDashboardView: React.FC = () => {
     addMenuItem,
     updateMenuItem,
     deleteMenuItem,
+    orders,
+    updateOrderStatus,
+    deleteOrder,
+    adminLogout,
+    copyShareLink,
     showToast
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'events' | 'quotes' | 'bookings' | 'cafeteria'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'events' | 'orders' | 'quotes' | 'bookings' | 'cafeteria'>('products');
+
+  // Orders Filter & Details state
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | OrderStatus>('all');
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState<RetailOrder | null>(null);
 
   // Product CRUD Modal states
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -119,11 +140,25 @@ export const AdminDashboardView: React.FC = () => {
 
   // Metrics
   const totalProductsCount = products.length;
+  const pendingOrdersCount = orders.filter((o) => o.status === 'pendiente').length;
   const pendingQuotesCount = quotes.filter((q) => q.status === 'pendiente').length;
   const totalBookingsCount = bookings.length;
   const totalBookedRevenue = bookings
     .filter((b) => b.status === 'confirmed')
     .reduce((acc, b) => acc + b.totalPaid, 0);
+
+  const filteredOrders = orders.filter((o) => {
+    const matchesStatus = orderStatusFilter === 'all' || o.status === orderStatusFilter;
+    const query = orderSearch.toLowerCase().trim();
+    if (!query) return matchesStatus;
+    const matchesQuery =
+      o.id.toLowerCase().includes(query) ||
+      o.customerName.toLowerCase().includes(query) ||
+      o.customerPhone.toLowerCase().includes(query) ||
+      o.city.toLowerCase().includes(query) ||
+      o.customerEmail.toLowerCase().includes(query);
+    return matchesStatus && matchesQuery;
+  });
 
   // --- Handlers for Products ---
   const handleOpenNewProduct = () => {
@@ -379,6 +414,14 @@ export const AdminDashboardView: React.FC = () => {
             <Calendar className="w-4 h-4 text-amber-400" />
             <span>Crear Evento</span>
           </button>
+          <button
+            onClick={adminLogout}
+            className="px-4 py-2.5 rounded-full bg-rose-950/70 hover:bg-rose-900 text-rose-300 text-xs font-bold transition flex items-center gap-2 cursor-pointer border border-rose-800/60 shadow-xs"
+            title="Cerrar Sesión Administrativa"
+          >
+            <LogOut className="w-4 h-4 text-rose-400" />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
 
         {/* Subtle decorative glow */}
@@ -397,6 +440,19 @@ export const AdminDashboardView: React.FC = () => {
           <p className="text-3xl font-black text-slate-900">{totalProductsCount}</p>
           <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#6F4E37]/10 text-[#6F4E37]">
             Categorías café y miel
+          </span>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pedidos Contraentrega</span>
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-700">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-black text-slate-900">{orders.length}</p>
+          <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900">
+            {pendingOrdersCount} pendientes
           </span>
         </div>
 
@@ -423,19 +479,6 @@ export const AdminDashboardView: React.FC = () => {
           <p className="text-3xl font-black text-slate-900">{totalBookingsCount}</p>
           <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900">
             Eventos de temporada
-          </span>
-        </div>
-
-        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recaudo Eventos Pro</span>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <DollarSign className="w-5 h-5" />
-            </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-black text-emerald-700">{formatCOP(totalBookedRevenue)}</p>
-          <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900">
-            Transacciones liquidadas
           </span>
         </div>
       </div>
@@ -476,6 +519,21 @@ export const AdminDashboardView: React.FC = () => {
         >
           <Calendar className="w-4 h-4" />
           <span>Creador de Eventos ({events.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('orders')}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            activeTab === 'orders'
+              ? 'bg-[#6F4E37] text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4" />
+          <span>Pedidos por Unidad ({orders.length})</span>
+          {pendingOrdersCount > 0 && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          )}
         </button>
 
         <button
@@ -763,7 +821,183 @@ export const AdminDashboardView: React.FC = () => {
         </div>
       )}
 
-      {/* 4. WHOLESALE QUOTES RECEIVED TAB */}
+      {/* 4. RETAIL ORDERS (CONTRAENTREGA) TAB */}
+      {activeTab === 'orders' && (
+        <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden space-y-6">
+          <div className="p-6 sm:p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-bold text-lg text-slate-900 font-display">Pedidos por Unidad & Contraentrega</h3>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Administra los pedidos de compras al detal con pago contraentrega en domicilio.
+              </p>
+            </div>
+
+            {/* Filter pills & search */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  placeholder="Buscar cliente, ID, ciudad..."
+                  className="pl-8.5 pr-3 py-1.5 text-xs rounded-full border border-slate-200 focus:ring-2 focus:ring-[#6F4E37] focus:outline-none w-48 sm:w-60"
+                />
+              </div>
+
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value as any)}
+                className="py-1.5 px-3 rounded-full text-xs font-bold border border-slate-200 bg-white text-slate-700 cursor-pointer focus:outline-none"
+              >
+                <option value="all">Todos ({orders.length})</option>
+                <option value="pendiente">Pendientes ({orders.filter((o) => o.status === 'pendiente').length})</option>
+                <option value="confirmado">Confirmados ({orders.filter((o) => o.status === 'confirmado').length})</option>
+                <option value="en_camino">En Camino ({orders.filter((o) => o.status === 'en_camino').length})</option>
+                <option value="entregado">Entregados ({orders.filter((o) => o.status === 'entregado').length})</option>
+                <option value="cancelado">Cancelados ({orders.filter((o) => o.status === 'cancelado').length})</option>
+              </select>
+            </div>
+          </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 space-y-3">
+              <ShoppingBag className="w-10 h-10 mx-auto opacity-30 text-slate-400" />
+              <p className="text-xs">No se encontraron pedidos contraentrega con los filtros actuales.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-50/70 text-slate-400 uppercase font-bold text-[10px] tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th className="py-4 px-6">Código & Fecha</th>
+                    <th className="py-4 px-6">Cliente & Contacto</th>
+                    <th className="py-4 px-6">Destino & Dirección</th>
+                    <th className="py-4 px-6">Productos</th>
+                    <th className="py-4 px-6">Total a Recibir</th>
+                    <th className="py-4 px-6">Estado</th>
+                    <th className="py-4 px-6 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredOrders.map((o) => {
+                    const statusStyles: Record<string, string> = {
+                      pendiente: 'bg-amber-50 text-amber-800 border border-amber-200',
+                      confirmado: 'bg-blue-50 text-blue-800 border border-blue-200',
+                      en_camino: 'bg-indigo-50 text-indigo-800 border border-indigo-200',
+                      entregado: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+                      cancelado: 'bg-rose-50 text-rose-800 border border-rose-200',
+                    };
+
+                    const dateFormatted = o.createdAt
+                      ? new Date(o.createdAt).toLocaleDateString('es-CO', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : 'N/D';
+
+                    const cleanPhone = o.customerPhone.replace(/[^0-9]/g, '');
+                    const waLink = `https://wa.me/${cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`}?text=${encodeURIComponent(
+                      `Hola ${o.customerName}, te saludamos de Melífera Coffee respecto a tu pedido contraentrega #${o.id}.`
+                    )}`;
+
+                    return (
+                      <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-4 px-6">
+                          <span className="font-mono text-[11px] text-[#6F4E37] font-black block">#{o.id}</span>
+                          <span className="text-[10px] text-slate-400 block mt-0.5">{dateFormatted}</span>
+                          <span className="inline-block mt-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-md bg-amber-100/70 text-[#2D1A0D]">
+                            Contraentrega
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <strong className="text-slate-900 block text-xs">{o.customerName}</strong>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-slate-500">{o.customerPhone}</span>
+                            <a
+                              href={waLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-600 hover:text-emerald-700"
+                              title="Escribir al WhatsApp del cliente"
+                            >
+                              <Send className="w-3 h-3 inline" />
+                            </a>
+                          </div>
+                          <span className="text-[10px] text-slate-400 block truncate max-w-[150px]">{o.customerEmail}</span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="font-bold text-slate-800 block">{o.city}, {o.department}</span>
+                          <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{o.address}</span>
+                          {o.neighborhood && (
+                            <span className="text-[9px] text-slate-400 block">Barrio: {o.neighborhood}</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="space-y-1">
+                            {o.items.map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-1.5 text-[11px] text-slate-700">
+                                <span className="font-bold text-[#6F4E37]">{item.quantity}x</span>
+                                <span className="truncate max-w-[140px]">{item.productName}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 font-black text-slate-900 text-sm">
+                          {formatCOP(o.total)}
+                        </td>
+                        <td className="py-4 px-6">
+                          <select
+                            value={o.status}
+                            onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
+                            className={`py-1 px-3 rounded-full text-[10px] font-bold border-0 cursor-pointer ${
+                              statusStyles[o.status] || 'bg-slate-100'
+                            }`}
+                          >
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="en_camino">En Camino</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                          </select>
+                        </td>
+                        <td className="py-4 px-6 text-right space-x-2">
+                          <button
+                            onClick={() => setSelectedOrderDetail(o)}
+                            className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold cursor-pointer transition-colors"
+                            title="Ver detalles completos del pedido"
+                          >
+                            Ver Detalle
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`¿Eliminar pedido #${o.id}?`)) {
+                                deleteOrder(o.id);
+                              }
+                            }}
+                            className="p-1.5 rounded-full text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition cursor-pointer"
+                            title="Eliminar pedido"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 5. WHOLESALE QUOTES RECEIVED TAB */}
       {activeTab === 'quotes' && (
         <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-slate-100">
@@ -801,7 +1035,27 @@ export const AdminDashboardView: React.FC = () => {
                       <td className="py-4 px-6">
                         <span className="font-mono text-[10px] text-[#6F4E37] font-bold block">{q.id}</span>
                         <strong className="text-slate-900 block">{q.customerName}</strong>
-                        <span className="text-[10px] text-slate-400">{q.email}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] text-slate-500">{q.phone}</span>
+                          {q.phone && (() => {
+                            const cleanPhone = q.phone.replace(/[^0-9]/g, '');
+                            const waLink = `https://wa.me/${cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`}?text=${encodeURIComponent(
+                              `Hola ${q.customerName}, te saludamos de Melífera Coffee respecto a tu cotización mayorista ${q.id}.`
+                            )}`;
+                            return (
+                              <a
+                                href={waLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-600 hover:text-emerald-700"
+                                title="Escribir al WhatsApp del cliente"
+                              >
+                                <Send className="w-3 h-3 inline" />
+                              </a>
+                            );
+                          })()}
+                        </div>
+                        <span className="text-[10px] text-slate-400 block">{q.email}</span>
                       </td>
                       <td className="py-4 px-6">
                         <div className="space-y-1">
@@ -1513,9 +1767,180 @@ export const AdminDashboardView: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex justify-end">
+            <div className="pt-4 border-t border-slate-100 flex flex-wrap justify-between items-center gap-2">
+              {(() => {
+                const cleanPhone = (selectedQuoteDetail.phone || '').replace(/[^0-9]/g, '');
+                if (!cleanPhone) return <div />;
+                const waLink = `https://wa.me/${cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`}?text=${encodeURIComponent(
+                  `Hola ${selectedQuoteDetail.customerName}, te contactamos de Melífera Coffee respecto a tu cotización mayorista ${selectedQuoteDetail.id} para el producto "${selectedQuoteDetail.productName}".`
+                )}`;
+                return (
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Contactar Cliente por WhatsApp</span>
+                  </a>
+                );
+              })()}
+
               <button
                 onClick={() => setSelectedQuoteDetail(null)}
+                className="px-6 py-2.5 rounded-full bg-[#0F172A] text-white text-xs font-bold hover:bg-slate-800 transition shadow-sm cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ORDER DETAIL */}
+      {selectedOrderDetail && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-[32px] max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-[#2D1A0D] border border-amber-300 inline-block mb-1">
+                  Pedido Contraentrega #{selectedOrderDetail.id}
+                </span>
+                <h3 className="font-bold text-lg text-slate-900 font-display">
+                  Detalle del Pedido
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedOrderDetail(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-600">
+              {/* Customer and Delivery Info */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Cliente:</span>
+                  <strong className="text-slate-900">{selectedOrderDetail.customerName}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Teléfono:</span>
+                  <strong className="text-slate-900">{selectedOrderDetail.customerPhone}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Correo:</span>
+                  <span>{selectedOrderDetail.customerEmail}</span>
+                </div>
+                {selectedOrderDetail.customerDocument && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Cédula / Documento:</span>
+                    <span>{selectedOrderDetail.customerDocument}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Ciudad / Departamento:</span>
+                  <span>{selectedOrderDetail.city}, {selectedOrderDetail.department}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Dirección de Entrega:</span>
+                  <strong className="text-slate-900 text-right">{selectedOrderDetail.address}</strong>
+                </div>
+                {selectedOrderDetail.neighborhood && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Barrio / Sector:</span>
+                    <span>{selectedOrderDetail.neighborhood}</span>
+                  </div>
+                )}
+                {selectedOrderDetail.notes && (
+                  <div className="pt-2 border-t border-slate-200 text-[11px] text-amber-900 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60">
+                    <strong>Notas para la entrega:</strong> {selectedOrderDetail.notes}
+                  </div>
+                )}
+              </div>
+
+              {/* Items List */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">
+                  Productos Solicitados ({selectedOrderDetail.items.length})
+                </h4>
+                <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden bg-white">
+                  {selectedOrderDetail.items.map((item, idx) => (
+                    <div key={idx} className="p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          src={item.productImage}
+                          alt={item.productName}
+                          className="w-10 h-10 rounded-xl object-cover border border-slate-100"
+                        />
+                        <div>
+                          <strong className="text-slate-900 block text-xs">{item.productName}</strong>
+                          <span className="text-[10px] text-slate-400">{item.unitLabel} • {item.quantity} unidad(es)</span>
+                        </div>
+                      </div>
+                      <span className="font-bold text-slate-900">{formatCOP(item.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment & Status summary */}
+              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-600">Modalidad:</span>
+                  <span className="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px]">
+                    Pago Contraentrega (Al Recibir)
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-600">Estado del Pedido:</span>
+                  <select
+                    value={selectedOrderDetail.status}
+                    onChange={(e) => {
+                      const newStatus = e.target.value as any;
+                      updateOrderStatus(selectedOrderDetail.id, newStatus);
+                      setSelectedOrderDetail((prev) => (prev ? { ...prev, status: newStatus } : null));
+                    }}
+                    className="font-bold text-xs bg-white border border-amber-300 rounded-lg px-2 py-1 cursor-pointer"
+                  >
+                    <option value="pendiente">Pendiente</option>
+                    <option value="confirmado">Confirmado</option>
+                    <option value="en_camino">En Camino</option>
+                    <option value="entregado">Entregado</option>
+                    <option value="cancelado">Cancelado</option>
+                  </select>
+                </div>
+                <div className="pt-2 border-t border-amber-200 flex justify-between font-bold text-sm text-[#2D1A0D]">
+                  <span>Total a Cobrar en Entrega:</span>
+                  <span className="text-[#3E2714] text-base">{formatCOP(selectedOrderDetail.total)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-4 border-t border-slate-100 flex flex-wrap justify-between items-center gap-2">
+              {(() => {
+                const cleanPhone = selectedOrderDetail.customerPhone.replace(/[^0-9]/g, '');
+                const waLink = `https://wa.me/${cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`}?text=${encodeURIComponent(
+                  `Hola ${selectedOrderDetail.customerName}, te contactamos de Melífera Coffee para coordinar el despacho de tu pedido #${selectedOrderDetail.id} por valor de ${formatCOP(selectedOrderDetail.total)} contraentrega.`
+                )}`;
+                return (
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Contactar Cliente por WhatsApp</span>
+                  </a>
+                );
+              })()}
+
+              <button
+                onClick={() => setSelectedOrderDetail(null)}
                 className="px-6 py-2.5 rounded-full bg-[#0F172A] text-white text-xs font-bold hover:bg-slate-800 transition shadow-sm cursor-pointer"
               >
                 Cerrar

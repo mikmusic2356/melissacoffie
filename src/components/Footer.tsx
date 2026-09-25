@@ -305,11 +305,6 @@ export const Footer: React.FC = () => {
                   Términos de Reservas & Envíos
                 </button>
               </li>
-              <li>
-                <button onClick={() => handleNav('admin')} className="hover:text-[#FFD242] transition text-xs text-amber-300/60 cursor-pointer">
-                  Panel Administrativo
-                </button>
-              </li>
             </ul>
           </div>
         </div>

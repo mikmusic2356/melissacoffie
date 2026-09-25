@@ -9,8 +9,8 @@ export const Hero: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
-  // Cloudflare R2 Video URL (streamed through server proxy)
-  const CLOUDFLARE_VIDEO_URL = '/r2/videos/WhatsApp%20Video%202026-09-23%20at%2021.23.34.mp4';
+  // Looping Hero Video (Stored in public/videos/ and tracked in git)
+  const HERO_VIDEO_URL = '/videos/hero-video-melifera.mp4';
   const FALLBACK_IMAGE = '/images/Honey_dipper_on_coffee_beans_202609022103.jpeg';
 
   // Custom hero media if user uploads their own media
@@ -90,10 +90,6 @@ export const Hero: React.FC = () => {
       subtitle: 'Cafetales de Altura',
     },
     {
-      title: 'SCA 88.5',
-      subtitle: 'Calidad Especial',
-    },
-    {
       title: 'Nacional',
       subtitle: 'Envíos a Toda Colombia',
     },
@@ -117,7 +113,7 @@ export const Hero: React.FC = () => {
         ) : (
           <video
             ref={videoRef}
-            src={customMedia ? customMedia.url : CLOUDFLARE_VIDEO_URL}
+            src={customMedia ? customMedia.url : HERO_VIDEO_URL}
             autoPlay
             loop
             muted={isMuted}
@@ -186,7 +182,7 @@ export const Hero: React.FC = () => {
       {/* Hero Content Area with Stat Badges / Cards */}
       <div className="relative w-full min-h-[380px] sm:min-h-[460px] md:min-h-[520px] lg:min-h-[580px] z-10 flex flex-col justify-end px-4 sm:px-6 lg:px-12 pb-6 sm:pb-8 pt-20">
         <div className="w-full max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {heroStats.map((stat, idx) => (
               <div 
                 key={idx}
@@ -206,3 +202,5 @@ export const Hero: React.FC = () => {
     </section>
   );
 };
+
+export default Hero;

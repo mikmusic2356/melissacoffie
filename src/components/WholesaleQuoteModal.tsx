@@ -10,6 +10,7 @@ export const WholesaleQuoteModal: React.FC = () => {
     products,
     createQuoteRequest,
     currentUser,
+    lastConsultedEmail,
     lastConsultedCedula,
     setActiveView,
   } = useApp();
@@ -19,15 +20,19 @@ export const WholesaleQuoteModal: React.FC = () => {
   const [frequency, setFrequency] = useState<'once' | 'monthly' | 'quarterly'>('monthly');
   const [customPackaging, setCustomPackaging] = useState(false);
   const [comments, setComments] = useState('');
-  const [targetDate, setTargetDate] = useState('2026-09-30');
+  const defaultTargetDate = () => {
+    const d = new Date(Date.now() + 15 * 86400000);
+    return d.toISOString().split('T')[0];
+  };
+  const [targetDate, setTargetDate] = useState(defaultTargetDate());
 
   // Contact info & Cedula
-  const [customerDocument, setCustomerDocument] = useState(lastConsultedCedula || currentUser.document || '');
-  const [customerName, setCustomerName] = useState(currentUser.name || '');
+  const [customerDocument, setCustomerDocument] = useState(lastConsultedCedula || '');
+  const [customerName, setCustomerName] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [email, setEmail] = useState(currentUser.email || '');
-  const [phone, setPhone] = useState(currentUser.phone || '');
-  const [city, setCity] = useState('Bogotá D.C.');
+  const [email, setEmail] = useState(lastConsultedEmail || '');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedQuoteId, setSubmittedQuoteId] = useState('');
@@ -78,18 +83,18 @@ export const WholesaleQuoteModal: React.FC = () => {
 
     const newQuote = createQuoteRequest({
       customerDocument: customerDocument.trim() || undefined,
-      customerName,
-      companyName: companyName || 'Cliente Particular Mayorista',
-      email,
-      phone,
-      city,
+      customerName: customerName.trim(),
+      companyName: companyName.trim() || 'Cliente Particular Mayorista',
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      city: city.trim(),
       productId: currentProd.id,
       productName: currentProd.name,
       requestedQuantity: quantity,
       frequency,
       customPackagingNeeded: customPackaging,
       targetDate,
-      comments,
+      comments: comments.trim(),
       estimatedUnitPrice: quoteCalculations.finalUnit,
       estimatedTotal: quoteCalculations.total,
     });
@@ -172,22 +177,52 @@ export const WholesaleQuoteModal: React.FC = () => {
               </p>
             </div>
 
-            <div className="pt-3 flex flex-col sm:flex-row gap-2.5 justify-center max-w-md mx-auto">
-              <button
-                onClick={() => {
-                  handleClose();
-                  setActiveView('mis-reservas');
-                }}
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#0F172A] text-white font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-2"
-              >
-                <span>Consultar con mi Cédula Ahora</span>
-              </button>
-              <button
-                onClick={handleClose}
-                className="w-full sm:w-auto px-5 py-3 rounded-full bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-colors cursor-pointer"
-              >
-                Cerrar Ventana
-              </button>
+            <div className="pt-2 flex flex-col gap-2.5 justify-center max-w-md mx-auto">
+              {(() => {
+                const text = `🍯 *NUEVA SOLICITUD DE COTIZACIÓN MAYORISTA - MELÍFERA COFFEE* ☕\n\n` +
+                  `📌 *Radicado:* ${submittedQuoteId}\n` +
+                  `👤 *Cliente / Contacto:* ${customerName}\n` +
+                  `🏢 *Empresa / Negocio:* ${companyName || 'N/A'}\n` +
+                  `📱 *Teléfono:* ${phone}\n` +
+                  `📍 *Ciudad / Destino:* ${city}\n\n` +
+                  `📦 *Producto:* ${currentProd?.name}\n` +
+                  `⚖️ *Cantidad solicitada:* ${quantity} kg / unidades\n` +
+                  `🔄 *Frecuencia estimada:* ${frequency}\n` +
+                  `💰 *Precio Estimado Unitario:* ${formatCOP(quoteCalculations.finalUnit)}\n` +
+                  `💵 *Total Estimado:* ${formatCOP(quoteCalculations.total)}\n` +
+                  (comments ? `💬 *Comentarios:* ${comments}\n\n` : `\n`) +
+                  `_Hola equipo Melífera, acabo de registrar esta cotización en la plataforma y deseo agilizar la atención y coordinar detalles._`;
+                const waUrl = `https://wa.me/573043785413?text=${encodeURIComponent(text)}`;
+                return (
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-md shadow-emerald-600/20 active:scale-[0.99]"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Notificar por WhatsApp a la Finca</span>
+                  </a>
+                );
+              })()}
+
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <button
+                  onClick={() => {
+                    handleClose();
+                    setActiveView('mis-reservas');
+                  }}
+                  className="w-full sm:flex-1 px-4 py-2.5 rounded-full bg-[#0F172A] text-white font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                >
+                  <span>Consultar con mi Cédula</span>
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         ) : (

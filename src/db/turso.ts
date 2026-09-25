@@ -7,6 +7,7 @@ import {
   INITIAL_BOOKINGS,
   INITIAL_QUOTES,
   INITIAL_CAFETERIA_MENU,
+  INITIAL_ORDERS,
 } from '../data/initialData';
 
 dotenv.config();
@@ -142,6 +143,29 @@ export async function initTursoSchema() {
       preparation_time_min INTEGER DEFAULT 10,
       is_farm_made INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // 7. Retail Orders (Unit / Cash on Delivery)
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id TEXT PRIMARY KEY,
+      customer_name TEXT NOT NULL,
+      customer_email TEXT NOT NULL,
+      customer_phone TEXT NOT NULL,
+      customer_document TEXT,
+      department TEXT NOT NULL,
+      city TEXT NOT NULL,
+      address TEXT NOT NULL,
+      neighborhood TEXT,
+      notes TEXT,
+      payment_method TEXT DEFAULT 'contraentrega',
+      items TEXT NOT NULL,
+      subtotal REAL NOT NULL,
+      shipping_cost REAL DEFAULT 0,
+      total REAL NOT NULL,
+      status TEXT DEFAULT 'pendiente',
+      created_at TEXT NOT NULL
     );
   `);
 
@@ -319,6 +343,40 @@ export async function initTursoSchema() {
       });
     }
     console.log('  -> Seeded cafeteria menu into Turso DB');
+  }
+
+  // Seed Retail Orders if empty
+  const ordersCheck = await turso.execute('SELECT COUNT(*) as count FROM orders');
+  if (Number(ordersCheck.rows[0].count) === 0) {
+    for (const o of INITIAL_ORDERS) {
+      await turso.execute({
+        sql: `INSERT INTO orders (
+          id, customer_name, customer_email, customer_phone, customer_document,
+          department, city, address, neighborhood, notes, payment_method,
+          items, subtotal, shipping_cost, total, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          o.id,
+          o.customerName,
+          o.customerEmail,
+          o.customerPhone,
+          o.customerDocument || null,
+          o.department,
+          o.city,
+          o.address,
+          o.neighborhood || null,
+          o.notes || null,
+          o.paymentMethod || 'contraentrega',
+          JSON.stringify(o.items || []),
+          o.subtotal,
+          o.shippingCost || 0,
+          o.total,
+          o.status,
+          o.createdAt,
+        ],
+      });
+    }
+    console.log('  -> Seeded retail orders into Turso DB');
   }
 
   console.log('🌟 Turso Database is fully operational and synchronized!');
