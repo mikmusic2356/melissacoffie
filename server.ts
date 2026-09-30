@@ -72,7 +72,8 @@ app.post("/api/upload-image", upload.single("image"), async (req, res) => {
   }
 });
 
-// Directly serve images and static files from public
+// Directly serve images, videos and static files from public
+app.use("/videos", express.static(path.join(process.cwd(), "public", "videos")));
 app.use("/images", express.static(path.join(process.cwd(), "public", "images")));
 app.use(express.static(path.join(process.cwd(), "public")));
 

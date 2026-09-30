@@ -212,8 +212,11 @@ export const ContactView: React.FC = () => {
                 </div>
                 <div>
                   <strong className="block text-[#2D1A0D] font-bold text-sm">Ubicación Finca & Cafetería:</strong>
-                  <span className="text-slate-600 leading-relaxed">
-                    Vereda El Silencio, Km 4 Vía San Juan de Arama, Cordillera Central, Colombia (1.650 msnm).
+                  <span className="text-slate-700 leading-relaxed block font-medium">
+                    Vía Panamericana Popayán - Cali, Km 36
+                  </span>
+                  <span className="text-slate-600 leading-relaxed block text-xs">
+                    Vereda Camilo Torres, Municipio Piendamó, Cauca, Colombia
                   </span>
                 </div>
               </div>

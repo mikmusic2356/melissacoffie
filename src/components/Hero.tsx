@@ -18,13 +18,73 @@ export const Hero: React.FC = () => {
     const saved = localStorage.getItem('melifera_custom_hero');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.url === 'string' && parsed.url.trim() !== '') {
+          return parsed;
+        }
       } catch {
         return null;
       }
     }
     return null;
   });
+
+  const activeVideoUrl = customMedia?.type === 'video' ? customMedia.url : HERO_VIDEO_URL;
+
+  // Ensure autoplay works reliably across all browsers (Chrome, Safari, Edge, Mobile)
+  React.useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = isMuted;
+    video.defaultMuted = true;
+    video.playsInline = true;
+
+    const playVideo = () => {
+      const promise = video.play();
+      if (promise !== undefined) {
+        promise.catch((err) => {
+          console.warn("Autoplay blocked or waiting for user interaction:", err);
+          // If unmuted playback failed, try muted
+          if (!video.muted) {
+            video.muted = true;
+            setIsMuted(true);
+            video.play().catch(() => {});
+          }
+        });
+      }
+    };
+
+    playVideo();
+
+    // In case the browser requires user interaction first, attempt play on first user gesture
+    const handleFirstInteraction = () => {
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('scroll', handleFirstInteraction);
+    };
+
+    window.addEventListener('click', handleFirstInteraction, { passive: true });
+    window.addEventListener('touchstart', handleFirstInteraction, { passive: true });
+    window.addEventListener('scroll', handleFirstInteraction, { passive: true });
+
+    return () => {
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('scroll', handleFirstInteraction);
+    };
+  }, [activeVideoUrl, isMuted]);
+
+  const handleVideoError = () => {
+    console.warn("Video failed to load:", activeVideoUrl);
+    if (customMedia) {
+      showToast('Error de Video', 'No se pudo reproducir el video personalizado. Restaurando video original.', 'warning');
+      resetToDefault();
+    }
+  };
 
   const handleFile = (file: File) => {
     const isVideo = file.type.startsWith('video/');
@@ -98,13 +158,16 @@ export const Hero: React.FC = () => {
         ) : (
           <video
             ref={videoRef}
-            src={customMedia ? customMedia.url : HERO_VIDEO_URL}
+            key={activeVideoUrl}
+            src={activeVideoUrl}
             autoPlay
             loop
             muted={isMuted}
             playsInline
+            preload="auto"
+            onError={handleVideoError}
             poster={FALLBACK_IMAGE}
-            className="w-full h-full object-cover object-center scale-100 filter brightness-95 contrast-105 transition-all duration-700"
+            className="w-full h-full object-cover object-center scale-100 filter brightness-95 contrast-105 transition-all duration-700 pointer-events-none"
           />
         )}
         

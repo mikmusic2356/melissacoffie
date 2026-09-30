@@ -200,10 +200,13 @@ export const Footer: React.FC = () => {
                 <span className="text-[10px] text-amber-300/80 font-medium">Síguenos</span>
               </div>
 
-              <p className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#FFD242] shrink-0" />
-                <span>Vereda El Silencio, Km 4 Vía San Juan de Arama, Cordillera Central</span>
-              </p>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-[#FFD242] shrink-0 mt-0.5" />
+                <span className="leading-snug">
+                  Vía Panamericana Popayán - Cali, Km 36<br />
+                  Vereda Camilo Torres, Municipio Piendamó
+                </span>
+              </div>
               <div className="space-y-1 text-xs">
                 <p className="flex items-center gap-2 font-bold text-white">
                   <Clock className="w-4 h-4 text-[#FFD242] shrink-0" />
