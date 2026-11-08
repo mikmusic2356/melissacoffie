@@ -1,0 +1,28 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["sharp", "@libsql/client"]
+
+# Redirigir todas las llamadas a la API hacia la función Serverless de Netlify
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+# Redirigir las llamadas a imágenes de Cloudflare R2 hacia la función Serverless
+[[redirects]]
+  from = "/r2/*"
+  to = "/.netlify/functions/api/r2/:splat"
+  status = 200
+  force = true
+
+# SPA fallback para React Router / navegación interna
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
